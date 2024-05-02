@@ -28,8 +28,8 @@ exports.updateStatusIssuances = async(req, res) => {
         const {status} = req.body
 
         await db.query(
-            'UPDATE book_issuance SET status = $1 WHERE id = $1 RETURNING *',
-            [status]
+            'UPDATE book_issuance SET status = $1 WHERE id = $2 RETURNING *',
+            [status, id]
         )
 
         const updated = response.rows;

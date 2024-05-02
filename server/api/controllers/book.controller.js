@@ -76,11 +76,32 @@ exports.serchBooks = async(req, res) => {
         }
         res.status(200).send(response.rows)
     }catch(e){
-        console.log(e);
+        console.error(e);
         res.status(500).send('failed')
     }
 }
 
 exports.deleteBooks = async(req, res) => {
-    
+    try{
+        const {title} = res.params
+        await db.query(`
+            WITH book_to_delete AS (
+                SELECT book.id
+                FROM book
+                WHERE book.title = $1
+            )
+            
+            DELETE FROM book
+            WHERE book.id IN (SELECT id FROM book_to_delete);
+            
+            DELETE FROM book_issuance
+            WHERE book_id IN (SELECT id FROM book_to_delete);`,
+            [title]
+        )
+
+        res.status(200).send('was deleted')
+    }catch(e){
+        console.error(e)
+        res.status(500).send('failed')
+    }
 }
