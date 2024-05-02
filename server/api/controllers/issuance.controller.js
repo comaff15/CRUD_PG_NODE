@@ -3,19 +3,14 @@ const db = require('../config/database.js');
 
 exports.createIssuance = async(req, res) => {
     try{
-        const {librerianID, readerID, bookID} = req.body
+        const {librerian_id, reader_id, book_id} = req.body
         const response = await db.query(
-            `INSERT INTO book_issuance (librerian_id, reader_id, book_id, issue, refund) VALUES($1, $2, $3, CURRENT_DATE, CURRENT_DATE + INTERVAL '2' MONTH RETURNING issue, refund)`,
-            [librerianID, readerID, bookID]
+            `INSERT INTO book_issuance (librerian_id, reader_id, book_id, issue, refund) VALUES($1, $2, $3, CURRENT_DATE, CURRENT_DATE + INTERVAL '2' MONTH)`,
+            [librerian_id, reader_id, book_id]
         )
 
-        const issuanse = response.rows
+        res.status(201).send(response.rows)
 
-        res.status(201).send({
-            body: {
-                refundDate: issuanse
-            }
-        })
     }catch(e){
         console.log(e)
         res.status(500).send('failed')
@@ -32,7 +27,7 @@ exports.updateStatusIssuances = async(req, res) => {
             [status, id]
         )
 
-        const updated = response.rows;
+        const updated = response.rows[0];
 
         res.status(200).send({
             message: 'Book was refundet',
@@ -50,7 +45,7 @@ exports.deleteIssuances = async(req, res) => {
     try{
         await db.query(
             `DELETE FROM book_issuance WHERE status = 'returned' AND refund < CURRENT_DATE - INTERVAL '12' MONTH;`
-        )
+        );
 
         res.status(200).send('issuances was deleted');
     }catch(e){

@@ -5,8 +5,8 @@ const router = new Router();
 
 router.post('/', readerController.createReader);
 router.get('/', readerController.fetchReaders);
+router.get('/:id', readerController.fetchReader);
 router.put('/:id', readerController.updateReader);
 router.delete('/:id', readerController.deleteReader)
-
 
 module.exports = router;
