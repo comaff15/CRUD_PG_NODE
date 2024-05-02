@@ -28,7 +28,7 @@ exports.updateStatusIssuances = async(req, res) => {
         const {status} = req.body
 
         await db.query(
-            'UPDATE book_issuance SET status = $1 RETURNING *',
+            'UPDATE book_issuance SET status = $1 WHERE id = $1 RETURNING *',
             [status]
         )
 
@@ -49,7 +49,7 @@ exports.updateStatusIssuances = async(req, res) => {
 exports.deleteIssuances = async(req, res) => {
     try{
         await db.query(
-            `DELETE FROM book_issuance WHERE status = 'returnedl AND refund < CURRENT_DATE - INTERVAL '12' MONTH;`
+            `DELETE FROM book_issuance WHERE status = 'returned' AND refund < CURRENT_DATE - INTERVAL '12' MONTH;`
         )
 
         res.status(200).send('issuances was deleted');

@@ -19,36 +19,68 @@ exports.createBook = async(req, res) => {
     }
 }
 
-exports.getAllBooks = async(req, res) => {
-    const response = await db.query(
-        'SELECT id ,theme_id, type_id, publishing_id, storage_id, author, title, to_char(publication, \'DD.MM.YYYY\') AS publication, pages FROM book ORDER BY title ASC'
-    )
-
-    res.status(200).send(response.rows);
-}
-
-exports.getOneBook = async(req, res) => {
+exports.getBooks = async(req, res) => {
     try{
-        const {id} = req.params;
-
         const response = await db.query(
             `SELECT
-                book.*,
+                book.id,
+                book.author,
+                book.title,
+                to_char(book.publication, \'DD.MM.YYYY\') AS publication,
                 theme.title AS theme,
                 type.type,
                 publishing.title AS publisher,
                 storage.place
-             FROM book WHERE id = $1
-             JOIN theme ON book.theme_id = theme.id
-             JOIN type ON book.type_id = type.id
-             JOIN publishing ON book.publishing_id = publishing.id
-             JOIN storage ON book.storage_id = storage.id`,
-            [id]
+            FROM book
+                LEFT JOIN theme ON book.theme_id = theme.id
+                LEFT JOIN type ON book.type_id = type.id
+                LEFT JOIN publishing ON book.publishing_id = publishing.id
+                LEFT JOIN storage ON book.storage_id = storage.id`, 
         )
-
         res.status(200).send(response.rows)
     }catch(e){
         console.error(e);
         res.status(500).send('failed')
     }
-}   
+}
+
+exports.serchBooks = async(req, res) => {
+    try{
+        const {author, theme, type, title} = req.query
+
+        const response = await db.query(
+            `   SELECT 
+                    book.id,
+                    book.author,
+                    book.title,
+                    to_char(book.publication, \'DD.MM.YYYY\') AS publication,
+                    theme.title AS theme,
+                    type.type,
+                    publishing.title AS publisher,
+                    storage.place
+                FROM book
+                    LEFT JOIN theme ON book.theme_id = theme.id
+                    LEFT JOIN type ON book.type_id = type.id
+                    LEFT JOIN publishing ON book.publishing_id = publishing.id
+                    LEFT JOIN storage ON book.storage_id = storage.id
+                WHERE
+                LOWER(book.author) LIKE LOWER('%'|| $1 ||'%')
+                OR LOWER(theme.title) LIKE LOWER('%'|| $2 ||'%')
+                OR LOWER(type.type) LIKE LOWER('%'|| $3 ||'%')
+                OR LOWER(book.title) LIKE LOWER('%'|| $4 ||'%');
+            `,[author, theme, type, title]
+        )
+
+        if(response.rows.length === 0) {
+            res.status(404).send('cant found nothing');
+        }
+        res.status(200).send(response.rows)
+    }catch(e){
+        console.log(e);
+        res.status(500).send('failed')
+    }
+}
+
+exports.deleteBooks = async(req, res) => {
+    
+}
