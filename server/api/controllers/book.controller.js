@@ -83,23 +83,18 @@ exports.serchBooks = async(req, res) => {
 
 exports.deleteBooks = async(req, res) => {
     try{
-        const {title} = res.params
-        await db.query(`
-            WITH book_to_delete AS (
-                SELECT book.id
-                FROM book
-                WHERE book.title = $1
-            )
-            
-            DELETE FROM book
-            WHERE book.id IN (SELECT id FROM book_to_delete);
-            
-            DELETE FROM book_issuance
-            WHERE book_id IN (SELECT id FROM book_to_delete);`,
+        const {title} = req.body
+
+        const response = await db.query(`
+            DELETE FROM book WHERE book.title = $1 RETURNING book.id ,book.author, book.title, to_char(book.publication, \'DD.MM.YYYY\') AS publication`,
             [title]
         )
 
-        res.status(200).send('was deleted')
+        const deleted = response.rows;
+
+        res.status(200).send({message: 'deleted books: ', body: {
+            deleted
+        }})
     }catch(e){
         console.error(e)
         res.status(500).send('failed')
